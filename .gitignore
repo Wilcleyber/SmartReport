@@ -1,0 +1,26 @@
+# Ambientes Virtuais (Essencial para não subir gigabytes de bibliotecas)
+venv/
+.venv/
+env/
+
+# Python cache
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Variáveis de Ambiente (Segurança!)
+.env
+
+# Arquivos gerados pelo sistema (SmartReport)
+# Não queremos subir os CSVs de teste nem os PDFs gerados
+app/uploads/*.csv
+app/uploads/*.xlsx
+app/uploads/*.pdf
+
+# IDEs
+.vscode/
+.idea/
+
+# SO
+.DS_Store
+Thumbs.db
