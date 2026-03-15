@@ -13,9 +13,9 @@ __pycache__/
 
 # Arquivos gerados pelo sistema (SmartReport)
 # Não queremos subir os CSVs de teste nem os PDFs gerados
-app/uploads/*.csv
-app/uploads/*.xlsx
-app/uploads/*.pdf
+uploads/*.csv
+uploads/*.xlsx
+uploads/*.pdf
 
 # IDEs
 .vscode/
