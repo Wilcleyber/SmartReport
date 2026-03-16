@@ -8,38 +8,32 @@ from reportlab.lib.utils import ImageReader
 class Visualizer:
     @staticmethod
     def generate_chart_base64(metrics: dict) -> str:
-        """
-        Gera um gráfico de barras baseado nas médias das métricas e retorna em Base64.
-        """
-        # Extrai apenas as médias para o gráfico
+        # (Sua lógica do gráfico está perfeita, mantive igual)
         labels = list(metrics.keys())
         values = [m['media'] for m in metrics.values()]
 
         plt.figure(figsize=(8, 4))
-        plt.bar(labels, values, color='#005a8c') # Azul aproximado ao tom corporativo
+        plt.bar(labels, values, color='#005a8c')
         plt.title('Resumo de Médias por Indicador')
         plt.xlabel('Indicadores')
         plt.ylabel('Valor Médio')
         plt.xticks(rotation=45, ha='right')
         plt.tight_layout()
 
-        # Salva o gráfico em um buffer de memória (sem criar arquivo no disco)
         buf = io.BytesIO()
         plt.savefig(buf, format='png')
         buf.seek(0)
-        
-        # Converte para Base64 para o Frontend exibir direto na tag <img>
         img_base64 = base64.b64encode(buf.read()).decode('utf-8')
-        plt.close() # Importante para não consumir memória do servidor
+        plt.close()
         return img_base64
 
     @staticmethod
-    def generate_pdf(analysis_text: str, chart_base64: str, file_name: str) -> str:
+    def generate_pdf(analysis_text: str, chart_base64: str, target_path: str) -> str:
         """
-        Cria um PDF profissional contendo a análise da IA e o gráfico.
+        Gera o PDF e salva no local especificado por target_path.
         """
-        pdf_path = f"app/uploads/relatorio_{file_name}.pdf"
-        c = canvas.Canvas(pdf_path, pagesize=letter)
+        # Criamos o PDF no caminho que o endpoint nos enviou
+        c = canvas.Canvas(target_path, pagesize=letter)
         width, height = letter
 
         # Cabeçalho
@@ -47,16 +41,22 @@ class Visualizer:
         c.drawString(50, height - 50, "SmartReport - Análise Inteligente de Dados")
         
         c.setFont("Helvetica", 10)
-        c.drawString(50, height - 70, f"Arquivo analisado: {file_name}")
+        # Extraímos apenas o nome do arquivo para o título visual no PDF
+        display_name = target_path.split("/")[-1]
+        c.drawString(50, height - 70, f"Relatório Gerado: {display_name}")
         c.line(50, height - 80, width - 50, height - 80)
 
         # Inserindo o Gráfico
         if chart_base64:
+            # Limpa o prefixo caso o frontend tenha enviado com data:image...
+            if "base64," in chart_base64:
+                chart_base64 = chart_base64.split("base64,")[1]
+            
             img_data = base64.b64decode(chart_base64)
             img_buffer = io.BytesIO(img_data)
             c.drawImage(ImageReader(img_buffer), 50, height - 350, width=500, height=250)
 
-        # Inserindo o Texto da IA (Tratamento básico de quebra de linha)
+        # Inserindo o Texto da IA
         c.setFont("Helvetica-Bold", 12)
         c.drawString(50, height - 380, "Insights do Analista IA:")
         
@@ -64,12 +64,12 @@ class Visualizer:
         text_object = c.beginText(50, height - 400)
         text_object.setLeading(14)
         
-        # Divide o texto em linhas para não ultrapassar a borda do PDF
+        # Divide o texto em linhas para não ultrapassar a borda
         lines = analysis_text.split('\n')
         for line in lines:
-            text_object.textLine(line[:100]) # Limita largura simples
+            # Simples quebra de linha manual
+            text_object.textLine(line[:105])
             
         c.drawText(text_object)
-
         c.save()
-        return pdf_path
+        return target_path
