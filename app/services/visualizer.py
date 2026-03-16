@@ -8,7 +8,6 @@ from reportlab.lib.utils import ImageReader
 class Visualizer:
     @staticmethod
     def generate_chart_base64(metrics: dict) -> str:
-        # (Sua lógica do gráfico está perfeita, mantive igual)
         labels = list(metrics.keys())
         values = [m['media'] for m in metrics.values()]
 
@@ -31,8 +30,8 @@ class Visualizer:
     def generate_pdf(analysis_text: str, chart_base64: str, target_path: str) -> str:
         """
         Gera o PDF e salva no local especificado por target_path.
+        Suporta múltiplas páginas para textos longos.
         """
-        # Criamos o PDF no caminho que o endpoint nos enviou
         c = canvas.Canvas(target_path, pagesize=letter)
         width, height = letter
 
@@ -41,14 +40,12 @@ class Visualizer:
         c.drawString(50, height - 50, "SmartReport - Análise Inteligente de Dados")
         
         c.setFont("Helvetica", 10)
-        # Extraímos apenas o nome do arquivo para o título visual no PDF
         display_name = target_path.split("/")[-1]
         c.drawString(50, height - 70, f"Relatório Gerado: {display_name}")
         c.line(50, height - 80, width - 50, height - 80)
 
         # Inserindo o Gráfico
         if chart_base64:
-            # Limpa o prefixo caso o frontend tenha enviado com data:image...
             if "base64," in chart_base64:
                 chart_base64 = chart_base64.split("base64,")[1]
             
@@ -61,15 +58,25 @@ class Visualizer:
         c.drawString(50, height - 380, "Insights do Analista IA:")
         
         c.setFont("Helvetica", 10)
-        text_object = c.beginText(50, height - 400)
-        text_object.setLeading(14)
-        
-        # Divide o texto em linhas para não ultrapassar a borda
+        y_position = height - 400
+        line_height = 14
+        margin_bottom = 50
+
         lines = analysis_text.split('\n')
         for line in lines:
-            # Simples quebra de linha manual
-            text_object.textLine(line[:105])
-            
-        c.drawText(text_object)
+            # Quebra manual para não ultrapassar largura
+            wrapped_line = line[:105]
+            c.drawString(50, y_position, wrapped_line)
+            y_position -= line_height
+
+            # Se chegou perto do rodapé, cria nova página
+            if y_position < margin_bottom:
+                c.showPage()
+                # Redefine fonte e cabeçalho da nova página
+                c.setFont("Helvetica-Bold", 12)
+                c.drawString(50, height - 50, "Insights do Analista IA (continuação):")
+                c.setFont("Helvetica", 10)
+                y_position = height - 80
+
         c.save()
         return target_path
