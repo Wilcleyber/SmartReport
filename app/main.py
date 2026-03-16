@@ -12,7 +12,8 @@ app = FastAPI(title="SmartReport API", version="1.0.0")
 os.makedirs("uploads", exist_ok=True)
 
 # Configuração de CORS
-origins_raw = os.getenv("ALLOWED_ORIGINS", "http://localhost:5173")
+default_origins = "http://localhost:5173,https://smart-report-lyart.vercel.app"
+origins_raw = os.getenv("ALLOWED_ORIGINS", default_origins)
 origins = [origin.strip() for origin in origins_raw.split(",")]
 
 app.add_middleware(
